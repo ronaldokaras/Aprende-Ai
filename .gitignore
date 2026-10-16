@@ -3,7 +3,7 @@
 # ============================================================
 
 # --- Segredos / configuração local ---
-config.js
+#config.js
 
 # --- Sistema operacional ---
 .DS_Store
