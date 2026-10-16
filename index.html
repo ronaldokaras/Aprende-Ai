@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#003b71" />
+  <meta name="description" content="Aprenda em 3 minutos: dúvidas, quizzes, flashcards e gamificação. Feito para quem tem pouco tempo." />
+  <title>Aprende Aí</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+</head>
+<body>
+
+  <!-- ONBOARDING: overlay em tela cheia — some ao tocar no botão ou no fundo escuro -->
+  <div id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-titulo">
+    <div class="onboarding-backdrop" onclick="fecharOnboarding()"></div>
+    <div class="onboarding-card">
+      <div class="onb-steps" id="onb-steps">
+        <span class="onb-dot ativo"></span>
+        <span class="onb-dot"></span>
+        <span class="onb-dot"></span>
+      </div>
+      <div id="onb-conteudo"></div>
+      <div class="onb-botoes">
+        <button type="button" class="btn-secundario onb-pular" id="onb-pular" onclick="fecharOnboarding()">Pular</button>
+        <button type="button" class="btn-primario" id="onb-next" onclick="onboardingNext()">Próximo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CELEBRAÇÃO: toque em qualquer lugar para fechar -->
+  <div id="celebra-overlay" class="celebra-overlay">
+    <div class="celebra-backdrop" onclick="fecharCelebracao()"></div>
+    <div class="celebra-box">
+      <div id="celebra-titulo" class="celebra-titulo">🎉</div>
+      <div id="celebra-sub" class="celebra-sub"></div>
+      <button type="button" class="btn-primario" style="margin-top:14px;" onclick="fecharCelebracao()">Continuar</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" aria-live="polite"></div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-info">
+      <span class="saudacao" id="saudacao">Olá! 👋</span>
+      <strong>Aprende Aí</strong>
+    </div>
+    <div class="topbar-acoes">
+      <button type="button" class="btn-acess" id="btn-tema" onclick="alternarTema()" title="Modo escuro">🌙</button>
+      <button type="button" class="btn-acess" onclick="aumentarFonte()" title="Aumentar fonte">A+</button>
+      <button type="button" class="btn-acess" onclick="diminuirFonte()" title="Diminuir fonte">A-</button>
+      <button type="button" class="btn-acess" onclick="alternarContraste()" title="Alto contraste">◐</button>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO -->
+  <main id="conteudo">
+
+    <!-- ===== HOME ===== -->
+    <section class="tela ativa" id="tela-home">
+      <div class="card destaque">
+        <div class="stat">
+          <span class="stat-icon">🔥</span>
+          <div><strong id="streak-dias">0</strong><span>dias seguidos</span></div>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">⭐</span>
+          <div><strong id="pontos-total">0</strong><span>pontos</span></div>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">📚</span>
+          <div><strong id="cards-dominados">0</strong><span>cards</span></div>
+        </div>
+      </div>
+
+      <div class="card nivel-card">
+        <div id="nivel-home" class="nivel-titulo">🌱 <strong>Iniciante</strong></div>
+        <div class="barra-nivel-bg">
+          <div class="barra-nivel-fill" id="barra-nivel" style="width:0%"></div>
+        </div>
+        <small id="txt-nivel-prog">0 pts</small>
+      </div>
+
+      <div class="card" id="missao-box"></div>
+
+      <h2 class="titulo-secao">Recomendado para você</h2>
+      <div id="recomendacao"></div>
+
+      <h2 class="titulo-secao">O que vamos fazer hoje?</h2>
+      <div class="grid-acoes">
+        <button type="button" class="acao-card azul" onclick="irPara('tela-duvida')">
+          <span class="acao-emoji">💬</span>
+          <strong>Tirar dúvida</strong>
+          <small>Pergunte qualquer coisa</small>
+        </button>
+        <button type="button" class="acao-card verde" onclick="irPara('tela-estudar')">
+          <span class="acao-emoji">📖</span>
+          <strong>Estudar</strong>
+          <small>Quiz, cards, feed</small>
+        </button>
+        <button type="button" class="acao-card amarelo" onclick="iniciarRapido()">
+          <span class="acao-emoji">⚡</span>
+          <strong>Estudo rápido</strong>
+          <small>Sessão de 3 min</small>
+        </button>
+        <button type="button" class="acao-card roxo" onclick="irPara('tela-foco')">
+          <span class="acao-emoji">⏱️</span>
+          <strong>Modo foco</strong>
+          <small>Pomodoro 25 min</small>
+        </button>
+      </div>
+
+      <h2 class="titulo-secao">Dica do dia</h2>
+      <div class="card dica" id="dica-dia">Carregando...</div>
+
+      <h2 class="titulo-secao">Seu progresso esta semana</h2>
+      <div class="card">
+        <div class="grafico-semana" id="grafico-semana"></div>
+        <p class="grafico-legenda">Quadradinhos verdes = dias que você estudou</p>
+      </div>
+    </section>
+
+    <!-- ===== DÚVIDA ===== -->
+    <section class="tela" id="tela-duvida">
+      <h2 class="titulo-secao">💬 Qual é a sua dúvida?</h2>
+      <div class="card">
+        <textarea id="input-duvida" placeholder="Ex: O que é fotossíntese?"></textarea>
+        <div class="chips">
+          <span class="chip" onclick="preencher('O que é fotossíntese?')">Fotossíntese</span>
+          <span class="chip" onclick="preencher('Como resolver equação do 1º grau?')">Equação 1º grau</span>
+          <span class="chip" onclick="preencher('O que é sujeito e predicado?')">Sujeito e predicado</span>
+          <span class="chip" onclick="preencher('O que foi a Revolução Industrial?')">Rev. Industrial</span>
+          <span class="chip" onclick="preencher('Como calcular porcentagem?')">Porcentagem</span>
+          <span class="chip" onclick="preencher('Qual a diferença entre clima e tempo?')">Clima x Tempo</span>
+        </div>
+        <button type="button" class="btn-primario" id="btn-explicar" onclick="explicar()">Explicar agora</button>
+      </div>
+
+      <div class="resultado" id="resultado">
+        <div class="bloco explicacao">
+          <h3>📖 Explicação simples
+            <button type="button" class="btn-ouvir" onclick="ouvirTexto('txt-explicacao')">🔊 Ouvir</button>
+          </h3>
+          <p id="txt-explicacao"></p>
+        </div>
+        <div class="bloco exemplo">
+          <h3>💡 Exemplo prático
+            <button type="button" class="btn-ouvir" onclick="ouvirTexto('txt-exemplo')">🔊 Ouvir</button>
+          </h3>
+          <p id="txt-exemplo"></p>
+        </div>
+        <div class="bloco quiz-resp">
+          <h3>✅ Quiz rápido</h3>
+          <p id="txt-quiz"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ESTUDAR ===== -->
+    <section class="tela" id="tela-estudar">
+      <h2 class="titulo-secao">📖 Como você quer estudar?</h2>
+
+      <div class="grid-acoes">
+        <button type="button" class="acao-card verde" onclick="irPara('tela-quiz')">
+          <span class="acao-emoji">🎯</span>
+          <strong>Quiz</strong>
+          <small>Perguntas rápidas</small>
+        </button>
+        <button type="button" class="acao-card azul" onclick="irPara('tela-feed')">
+          <span class="acao-emoji">📱</span>
+          <strong>Pílulas</strong>
+          <small>Feed de 30s</small>
+        </button>
+        <button type="button" class="acao-card amarelo" onclick="irPara('tela-flashcards')">
+          <span class="acao-emoji">🃏</span>
+          <strong>Flashcards</strong>
+          <small>Revisão inteligente</small>
+        </button>
+        <button type="button" class="acao-card roxo" onclick="irPara('tela-prova')">
+          <span class="acao-emoji">📝</span>
+          <strong>Modo prova</strong>
+          <small>Simulado com nota</small>
+        </button>
+      </div>
+
+      <h2 class="titulo-secao">Matérias</h2>
+      <div class="materias" id="lista-materias"></div>
+
+      <h2 class="titulo-secao">Mapa de dificuldades</h2>
+      <div class="card" id="mapa-dificuldades">
+        <p style="color:var(--texto-suave); font-size:0.9rem;">
+          Faça quizzes para o app identificar onde você erra mais.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== QUIZ ===== -->
+    <section class="tela" id="tela-quiz">
+      <h2 class="titulo-secao">🎯 Quiz</h2>
+      <div class="quiz-barra-bg">
+        <div class="quiz-barra-fill" id="quiz-barra" style="width:0%"></div>
+      </div>
+      <div class="card" id="quiz-container">
+        <p class="quiz-progresso" id="quiz-progresso">Pergunta 1 de 5</p>
+        <h3 id="quiz-pergunta">Carregando...</h3>
+        <div class="quiz-opcoes" id="quiz-opcoes"></div>
+        <p class="quiz-feedback" id="quiz-feedback"></p>
+      </div>
+      <button type="button" class="btn-primario" id="btn-proximo" onclick="proximoQuiz()" style="display:none;">Próxima</button>
+      <button type="button" class="btn-secundario" onclick="reiniciarQuiz()">🔄 Reiniciar quiz</button>
+    </section>
+
+    <!-- ===== FEED ===== -->
+    <section class="tela" id="tela-feed">
+      <h2 class="titulo-secao">📱 Pílulas de conhecimento</h2>
+      <p style="color:var(--texto-suave); font-size:0.9rem; margin-bottom:12px;">
+        Cada pílula leva cerca de 30 segundos. Salve as que forem úteis.
+      </p>
+      <div class="feed" id="feed-container"></div>
+      <button type="button" class="btn-secundario" id="btn-mais-pilulas" onclick="carregarMaisPilulas()">Carregar mais pílulas</button>
+    </section>
+
+    <!-- ===== FLASHCARDS ===== -->
+    <section class="tela" id="tela-flashcards">
+      <h2 class="titulo-secao">🃏 Flashcards</h2>
+      <p style="color:var(--texto-suave); font-size:0.9rem; margin-bottom:12px;">
+        O app mostra cada card só quando você está prestes a esquecer (repetição espaçada).
+      </p>
+
+      <div class="card-flash" id="card-flash" onclick="virarFlash()">
+        <div class="flash-frente" id="flash-frente">
+          <span class="flash-tag" id="flash-tag">Matemática</span>
+          <p id="flash-pergunta">Carregando...</p>
+          <small>Toque para ver a resposta</small>
+        </div>
+        <div class="flash-verso" id="flash-verso" style="display:none;">
+          <p id="flash-resposta"></p>
+          <small>Você acertou?</small>
+        </div>
+      </div>
+
+      <div class="flash-acoes" id="flash-acoes" style="display:none;">
+        <button type="button" class="btn-errei" onclick="respondeuFlash(false)">😕 Errei</button>
+        <button type="button" class="btn-acertei" onclick="respondeuFlash(true)">😃 Acertei</button>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <p style="font-size:0.85rem; color:var(--texto-suave);">
+          <strong id="flash-restantes">0</strong> cards para revisar agora ·
+          <strong id="flash-total">0</strong> no total
+        </p>
+      </div>
+
+      <button type="button" class="btn-secundario" onclick="resetarFlashcards()">🔄 Resetar todos os cards</button>
+    </section>
+
+    <!-- ===== ESTUDO RÁPIDO ===== -->
+    <section class="tela" id="tela-rapido">
+      <h2 class="titulo-secao">⚡ Estudo rápido (3 min)</h2>
+
+      <div class="card" id="rapido-intro">
+        <p style="margin-bottom:12px; font-size:0.95rem;">
+          Uma sessão completa de 3 minutos: <br>
+          📖 1 micro-aula · 🎯 1 quiz · 🃏 1 flashcard
+        </p>
+        <button type="button" class="btn-primario" onclick="comecarRapido()">Começar agora</button>
+      </div>
+
+      <div id="rapido-conteudo" style="display:none;"></div>
+    </section>
+
+    <!-- ===== MODO PROVA ===== -->
+    <section class="tela" id="tela-prova">
+      <h2 class="titulo-secao">📝 Modo prova</h2>
+
+      <div class="card" id="prova-intro">
+        <p style="margin-bottom:12px; font-size:0.95rem;">
+          Simulado com 10 questões, cronômetro e nota. No final, você recebe um plano de estudo personalizado.
+        </p>
+        <label style="font-size:0.9rem; display:block; margin-bottom:6px;">Matéria:</label>
+        <select id="prova-materia" class="select-materia">
+          <option value="todas">Todas as matérias</option>
+          <option value="matematica">Matemática</option>
+          <option value="portugues">Português</option>
+          <option value="historia">História</option>
+          <option value="geografia">Geografia</option>
+          <option value="quimica">Química</option>
+          <option value="biologia">Biologia</option>
+        </select>
+        <button type="button" class="btn-primario" onclick="iniciarProva()">Iniciar prova</button>
+      </div>
+
+      <div id="prova-conteudo" style="display:none;"></div>
+    </section>
+
+    <!-- ===== FOCO ===== -->
+    <section class="tela" id="tela-foco">
+      <h2 class="titulo-secao">⏱️ Modo foco</h2>
+      <div class="card foco-card">
+        <div class="foco-circulo" id="foco-circulo">
+          <span id="foco-tempo">25:00</span>
+        </div>
+        <p id="foco-status" style="color:var(--texto-suave); font-size:0.9rem; margin-top:10px;">
+          Pronto para focar?
+        </p>
+        <div class="foco-botoes">
+          <button type="button" class="btn-primario" id="btn-foco" onclick="alternarFoco()">Iniciar foco</button>
+          <button type="button" class="btn-secundario" onclick="resetarFoco()">Resetar</button>
+        </div>
+      </div>
+      <div class="card">
+        <p style="font-size:0.9rem; color:var(--texto);">
+          💡 <strong>Dica:</strong> a cada 25 min de foco, descanse 5 min. Estude 4 ciclos e faça uma pausa longa de 15 min.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== PERFIL ===== -->
+    <section class="tela" id="tela-perfil">
+      <h2 class="titulo-secao">🏆 Seu progresso</h2>
+      <div class="card perfil-card">
+        <div class="perfil-avatar">👤</div>
+        <strong id="perfil-nivel">🌱 Iniciante</strong>
+        <strong id="perfil-pontos" style="font-size:1.1rem; margin-top:4px;">0 pontos</strong>
+        <p id="perfil-streak">0 dias seguidos</p>
+      </div>
+
+      <h3 class="titulo-secao">Conquistas</h3>
+      <div class="conquistas" id="conquistas"></div>
+
+      <h3 class="titulo-secao">Estatísticas</h3>
+      <div class="card" id="stats-perfil"></div>
+
+      <h3 class="titulo-secao">Atividade recente</h3>
+      <div class="card" id="historico-perfil"></div>
+
+      <button type="button" class="btn-secundario" onclick="zerarProgresso()">🗑️ Zerar progresso</button>
+    </section>
+
+  </main>
+
+  <!-- NAV INFERIOR -->
+  <nav class="bottom-nav">
+    <button type="button" class="nav-item ativo" data-tela="tela-home" onclick="irPara('tela-home')">
+      <span>🏠</span><small>Início</small>
+    </button>
+    <button type="button" class="nav-item" data-tela="tela-duvida" onclick="irPara('tela-duvida')">
+      <span>💬</span><small>Dúvida</small>
+    </button>
+    <button type="button" class="nav-item" data-tela="tela-estudar" onclick="irPara('tela-estudar')">
+      <span>📖</span><small>Estudar</small>
+    </button>
+    <button type="button" class="nav-item" data-tela="tela-foco" onclick="irPara('tela-foco')">
+      <span>⏱️</span><small>Foco</small>
+    </button>
+    <button type="button" class="nav-item" data-tela="tela-perfil" onclick="irPara('tela-perfil')">
+      <span>🏆</span><small>Perfil</small>
+    </button>
+  </nav>
+
+  <!-- VLibras (escondido durante onboarding via CSS body.onboarding-ativo) -->
+  <div vw class="enabled" id="vlibras-root">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper>
+      <div class="vw-plugin-top-wrapper"></div>
+    </div>
+  </div>
+
+  <script src="dados.js"></script>
+  <script src="app.js"></script>
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>
+    try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch (e) {}
+  </script>
+
+</body>
+</html>
