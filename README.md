@@ -1,6 +1,8 @@
 # Aprende Aí 📚
 
 App completo de aprendizagem para quem tem pouco tempo.
+## Link Para Acessar
+https://ronaldokaras.github.io/Aprende-Ai/
 
 ## 🚀 Como rodar
 1. Crie a pasta `aprende-ai/` e coloque os 7 arquivos dentro
