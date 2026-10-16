@@ -1,6 +1,6 @@
-const CACHE = 'aprendeai-v3';
+const CACHE = 'aprendeai-v7';
 const ARQUIVOS = [
-  './', './index.html', './style.css', './dados.js',
+  './', './index.html', './style.css', './config.js', './dados.js',
   './app.js', './manifest.json'
 ];
 

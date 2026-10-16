@@ -22,6 +22,7 @@ estado.missaoCompleta = estado.missaoCompleta || false;
 estado.vistoOnboarding = estado.vistoOnboarding || false;
 estado.temaEscuro = estado.temaEscuro || false;
 estado.historico = estado.historico || [];
+estado.geminiKey = estado.geminiKey || (typeof CONFIG !== 'undefined' ? (CONFIG.GEMINI_API_KEY || '') : '') || '';
 
 // ===== NAVEGAÇÃO =====
 function irPara(idTela) {
@@ -46,7 +47,7 @@ function irPara(idTela) {
     renderizarRecomendacao();
     renderizarMissao();
   }
-  if (idTela === 'tela-perfil') atualizarInterface();
+  if (idTela === 'tela-perfil') { atualizarInterface(); atualizarStatusGemini(); }
 }
 
 // ===== ACESSIBILIDADE =====
@@ -196,6 +197,7 @@ function atualizarInterface() {
 
 // ===== TOAST =====
 function mostrarToast(msg) {
+  if (document.body.classList.contains('onboarding-ativo')) return;
   let t = document.getElementById('toast');
   if (!t) {
     t = document.createElement('div');
@@ -208,13 +210,22 @@ function mostrarToast(msg) {
 }
 
 // ===== CELEBRAÇÃO =====
+let _celebraTimer = null;
 function celebrar(titulo, sub) {
+  // Não mostra celebração por cima do onboarding
+  if (document.body.classList.contains('onboarding-ativo')) return;
   const overlay = document.getElementById('celebra-overlay');
   if (!overlay) return;
   document.getElementById('celebra-titulo').innerText = titulo;
   document.getElementById('celebra-sub').innerText = sub || '';
   overlay.classList.add('ativo');
-  setTimeout(() => overlay.classList.remove('ativo'), 2800);
+  clearTimeout(_celebraTimer);
+  _celebraTimer = setTimeout(fecharCelebracao, 3500);
+}
+function fecharCelebracao() {
+  const overlay = document.getElementById('celebra-overlay');
+  if (overlay) overlay.classList.remove('ativo');
+  clearTimeout(_celebraTimer);
 }
 
 // ===== CONQUISTAS =====
@@ -435,7 +446,7 @@ function zerarProgresso() {
       flashcards: [], totalQuizzes: 0, totalDuvidas: 0, pilulasLidas: [],
       totalRapidos: 0, missaoDia: null, missaoProgresso: 0,
       missaoCompleta: false, vistoOnboarding: true, temaEscuro: estado.temaEscuro,
-      historico: []
+      historico: [], geminiKey: estado.geminiKey || ''
     };
     salvar();
     atualizarInterface();
@@ -448,31 +459,115 @@ function preencher(texto) {
   document.getElementById('input-duvida').value = texto;
 }
 
+function respostaDemo(pergunta) {
+  const chave = pergunta.toLowerCase();
+  if (chave.includes('fotoss') || chave.includes('planta')) return RESPOSTAS_DEMO.fotossintese;
+  if (chave.includes('equa') || chave.includes('grau') || chave.includes('x +') || chave.includes('x+')) return RESPOSTAS_DEMO.equacao;
+  if (chave.includes('sujeito') || chave.includes('predicado')) return RESPOSTAS_DEMO.sujeito;
+  if (chave.includes('revolu') || chave.includes('industrial')) return RESPOSTAS_DEMO.revolucao;
+  if (chave.includes('porcent') || chave.includes('%')) return RESPOSTAS_DEMO.porcentagem;
+  if (chave.includes('clima') || chave.includes('tempo')) return RESPOSTAS_DEMO.clima;
+  return {
+    explicacao: `Modo offline/demo. Configure a chave Gemini no Perfil para respostas de IA sobre qualquer tema.\n\nVocê perguntou: "${pergunta}"`,
+    exemplo: 'Exemplo: explique como se fosse para um amigo de 10 anos — o que é, por que importa, e um caso do dia a dia.',
+    quiz: '1) Pergunta fácil sobre o tema\n2) Pergunta média\n3) Pergunta desafio'
+  };
+}
+
+async function chamarGemini(pergunta) {
+  const key = (estado.geminiKey || '').trim();
+  if (!key) return null;
+
+  const prompt = `Você é um tutor paciente do app Aprende Aí, para alunos do ensino fundamental e médio no Brasil.
+Explique de forma SIMPLES, clara e curta (máx. 6 frases).
+Responda APENAS com JSON válido, sem markdown e sem texto fora do JSON, neste formato exato:
+{"explicacao":"...","exemplo":"...","quiz":"..."}
+
+Regras:
+- explicacao: o que é / como funciona, linguagem fácil
+- exemplo: 1 exemplo prático do cotidiano ou passo a passo
+- quiz: 2 perguntas de múltipla escolha com a resposta certa marcada com ✅
+- Tudo em português do Brasil
+- Tema da dúvida do aluno: ${pergunta}`;
+
+  const model = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_MODEL) ? CONFIG.GEMINI_MODEL : 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 1024,
+        responseMimeType: 'application/json'
+      }
+    })
+  });
+
+  if (!resp.ok) {
+    const errTxt = await resp.text().catch(() => '');
+    console.warn('Gemini erro', resp.status, errTxt);
+    if (resp.status === 400 || resp.status === 403) {
+      throw new Error('Chave inválida ou sem permissão. Gere outra em aistudio.google.com/apikey');
+    }
+    if (resp.status === 429) {
+      throw new Error('Limite gratuito atingido. Tente de novo em alguns minutos.');
+    }
+    throw new Error('Falha na API Gemini (' + resp.status + ')');
+  }
+
+  const dados = await resp.json();
+  const texto = dados?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!texto) throw new Error('Resposta vazia da IA');
+
+  let limpo = texto.trim();
+  // remove cercas de código se vierem
+  limpo = limpo.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(limpo);
+  } catch (e) {
+    // tenta extrair o primeiro objeto JSON
+    const m = limpo.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('Não deu para ler a resposta da IA');
+    parsed = JSON.parse(m[0]);
+  }
+
+  return {
+    explicacao: String(parsed.explicacao || parsed.explicação || '').trim() || 'Sem explicação.',
+    exemplo: String(parsed.exemplo || '').trim() || 'Sem exemplo.',
+    quiz: String(parsed.quiz || '').trim() || 'Sem quiz.'
+  };
+}
+
 async function explicar() {
   const pergunta = document.getElementById('input-duvida').value.trim();
   if (!pergunta) return alert('Digite uma dúvida primeiro!');
 
   const btn = document.getElementById('btn-explicar');
-  btn.innerText = 'Pensando... 🤔';
+  const tinhaChave = !!(estado.geminiKey || '').trim();
+  btn.innerText = tinhaChave ? 'Consultando Gemini... ✨' : 'Pensando... 🤔';
   btn.disabled = true;
 
-  await new Promise(r => setTimeout(r, 600));
-
-  const chave = pergunta.toLowerCase();
   let resposta;
+  let usouIA = false;
 
-  if (chave.includes('fotoss') || chave.includes('planta')) resposta = RESPOSTAS_DEMO.fotossintese;
-  else if (chave.includes('equa') || chave.includes('grau') || chave.includes('x +') || chave.includes('x+')) resposta = RESPOSTAS_DEMO.equacao;
-  else if (chave.includes('sujeito') || chave.includes('predicado')) resposta = RESPOSTAS_DEMO.sujeito;
-  else if (chave.includes('revolu') || chave.includes('industrial')) resposta = RESPOSTAS_DEMO.revolucao;
-  else if (chave.includes('porcent') || chave.includes('%')) resposta = RESPOSTAS_DEMO.porcentagem;
-  else if (chave.includes('clima') || chave.includes('tempo')) resposta = RESPOSTAS_DEMO.clima;
-  else {
-    resposta = {
-      explicacao: `Aqui a IA explicaria "${pergunta}" em linguagem simples. No modo demo usamos respostas prontas. Tente: fotossíntese, equação do 1º grau, sujeito e predicado, Revolução Industrial, porcentagem ou clima.`,
-      exemplo: 'Exemplo: imagine que você está explicando isso para um amigo de 10 anos. Comece pelo "o que é", depois dê um exemplo do dia a dia.',
-      quiz: '1) Pergunta fácil sobre o tema\n2) Pergunta média\n3) Pergunta desafio'
-    };
+  try {
+    if (tinhaChave) {
+      resposta = await chamarGemini(pergunta);
+      usouIA = true;
+    } else {
+      await new Promise(r => setTimeout(r, 400));
+      resposta = respostaDemo(pergunta);
+    }
+  } catch (err) {
+    console.warn(err);
+    mostrarToast(err.message || 'Erro na IA — usando demo');
+    resposta = respostaDemo(pergunta);
+    usouIA = false;
   }
 
   document.getElementById('txt-explicacao').innerText = resposta.explicacao;
@@ -480,14 +575,54 @@ async function explicar() {
   document.getElementById('txt-quiz').innerText = resposta.quiz;
   document.getElementById('resultado').classList.add('ativo');
 
+  const badge = document.getElementById('ia-badge');
+  if (badge) {
+    badge.style.display = 'inline-block';
+    badge.innerText = usouIA ? '✨ Gemini' : '📦 Demo';
+    badge.className = 'ia-badge ' + (usouIA ? 'ia-on' : 'ia-off');
+  }
+
   btn.innerText = 'Explicar agora';
   btn.disabled = false;
 
   estado.totalDuvidas++;
-  ganharPontos(10, 'Dúvida');
+  ganharPontos(usouIA ? 15 : 10, usouIA ? 'Dúvida (IA)' : 'Dúvida');
   registrarMissao('duvida');
   desbloquearConquista('duvida');
   verificarConquistas();
+}
+
+function salvarGeminiKey() {
+  const input = document.getElementById('input-gemini-key');
+  if (!input) return;
+  let val = input.value.trim();
+  // Se apagar o campo, volta a usar a chave do config.js (se existir)
+  if (!val && typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) {
+    val = CONFIG.GEMINI_API_KEY;
+  }
+  estado.geminiKey = val;
+  salvar();
+  atualizarStatusGemini();
+  mostrarToast(val ? 'Chave Gemini salva' : 'Chave removida');
+}
+
+function atualizarStatusGemini() {
+  const status = document.getElementById('gemini-status');
+  const input = document.getElementById('input-gemini-key');
+  const tem = !!(estado.geminiKey || '').trim();
+  if (status) {
+    status.innerHTML = tem
+      ? '<span class="gemini-ok">✅ IA ativa — respostas pelo Gemini</span>'
+      : '<span class="gemini-off">⚪ Sem chave — modo demo</span>';
+  }
+  if (input && !input.matches(':focus')) {
+    input.value = estado.geminiKey || '';
+    input.placeholder = tem ? '•••••••• (chave salva)' : 'Cole a chave do Gemini aqui';
+  }
+}
+
+function abrirLinkGemini() {
+  window.open('https://aistudio.google.com/apikey', '_blank', 'noopener');
 }
 
 // ===== QUIZ =====
@@ -632,9 +767,9 @@ function carregarMaisPilulas() {
   });
 
   pilulasVisiveis += lote.length;
-  const btnMais = document.querySelector('#tela-feed .btn-secundario');
-  if (btnMais && pilulasVisiveis >= BANCO_PILULAS.length) {
-    btnMais.style.display = 'none';
+  const btnMais = document.getElementById('btn-mais-pilulas');
+  if (btnMais) {
+    btnMais.style.display = pilulasVisiveis >= BANCO_PILULAS.length ? 'none' : 'block';
   }
 }
 
@@ -1075,42 +1210,122 @@ function estudarMateria(id) {
   reiniciarQuiz(id);
 }
 
-// ===== ONBOARDING =====
+// ===== ONBOARDING (3 passos) =====
+const ONB_PASSOS = [
+  {
+    emoji: '📚',
+    titulo: 'Bem-vindo ao Aprende Aí',
+    html: `<p>Falta de tempo é a maior barreira para estudar. Por isso criamos sessões de <strong>3 minutos</strong>: pílula + quiz + flashcard.</p>
+      <ul class="onb-lista">
+        <li>⚡ Estudo rápido no intervalo</li>
+        <li>🎯 Missão do dia todos os dias</li>
+        <li>🏆 Pontos, níveis e conquistas</li>
+      </ul>`
+  },
+  {
+    emoji: '🧠',
+    titulo: 'Aprenda do seu jeito',
+    html: `<p>O app se adapta ao que você erra e acerta.</p>
+      <ul class="onb-lista">
+        <li>🃏 Flashcards com repetição espaçada</li>
+        <li>📊 Mapa das matérias mais difíceis</li>
+        <li>💬 Tire dúvidas em linguagem simples</li>
+      </ul>`
+  },
+  {
+    emoji: '🔥',
+    titulo: 'Consistência > intensidade',
+    html: `<p>3 minutos por dia já fazem diferença. Mantenha o streak e suba de nível.</p>
+      <ul class="onb-lista">
+        <li>⏱️ Modo foco (Pomodoro 25 min)</li>
+        <li>📝 Simulado com nota e relatório</li>
+        <li>🌙 Modo escuro e acessibilidade</li>
+      </ul>`
+  }
+];
+
+let onbPasso = 0;
+
+function renderOnboardingPasso() {
+  const passo = ONB_PASSOS[onbPasso];
+  const box = document.getElementById('onb-conteudo');
+  if (!box || !passo) return;
+  box.innerHTML = `
+    <div class="onb-emoji">${passo.emoji}</div>
+    <h2 id="onb-titulo">${passo.titulo}</h2>
+    ${passo.html}
+  `;
+  document.querySelectorAll('#onb-steps .onb-dot').forEach((d, i) => {
+    d.classList.toggle('ativo', i === onbPasso);
+  });
+  const btn = document.getElementById('onb-next');
+  if (btn) btn.innerText = onbPasso >= ONB_PASSOS.length - 1 ? 'Começar agora' : 'Próximo';
+  const pular = document.getElementById('onb-pular');
+  if (pular) pular.style.visibility = onbPasso >= ONB_PASSOS.length - 1 ? 'hidden' : 'visible';
+}
+
+function onboardingNext() {
+  if (onbPasso >= ONB_PASSOS.length - 1) {
+    fecharOnboarding();
+    return;
+  }
+  onbPasso++;
+  renderOnboardingPasso();
+}
+
+function abrirOnboarding() {
+  onbPasso = 0;
+  renderOnboardingPasso();
+  const onb = document.getElementById('onboarding');
+  if (!onb) return;
+  onb.classList.add('ativo');
+  document.body.classList.add('onboarding-ativo');
+}
+
 function fecharOnboarding() {
   estado.vistoOnboarding = true;
   salvar();
-  document.getElementById('onboarding').classList.remove('ativo');
+  const onb = document.getElementById('onboarding');
+  if (onb) onb.classList.remove('ativo');
+  document.body.classList.remove('onboarding-ativo');
 }
 
 // ===== INICIALIZAÇÃO =====
 function init() {
-  atualizarStreak();
-  if (estado.temaEscuro) document.body.classList.add('escuro');
-  const btnTema = document.getElementById('btn-tema');
-  if (btnTema) btnTema.innerText = estado.temaEscuro ? '☀️' : '🌙';
+  try {
+    atualizarStreak();
+    if (estado.temaEscuro) document.body.classList.add('escuro');
+    const btnTema = document.getElementById('btn-tema');
+    if (btnTema) btnTema.innerText = estado.temaEscuro ? '☀️' : '🌙';
 
-  atualizarInterface();
-  inicializarFlashcards();
-  renderizarMaterias();
-  renderizarMapa();
+    atualizarInterface();
+    inicializarFlashcards();
+    renderizarMaterias();
+    renderizarMapa();
 
-  const hora = new Date().getHours();
-  let saud;
-  if (hora < 12) saud = 'Bom dia! ☀️';
-  else if (hora < 18) saud = 'Boa tarde! 🌤️';
-  else saud = 'Boa noite! 🌙';
-  const elSaud = document.getElementById('saudacao');
-  if (elSaud) elSaud.innerText = saud;
+    const hora = new Date().getHours();
+    let saud;
+    if (hora < 12) saud = 'Bom dia! ☀️';
+    else if (hora < 18) saud = 'Boa tarde! 🌤️';
+    else saud = 'Boa noite! 🌙';
+    const elSaud = document.getElementById('saudacao');
+    if (elSaud) elSaud.innerText = saud;
 
-  const elDica = document.getElementById('dica-dia');
-  if (elDica) elDica.innerText = DICAS[Math.floor(Math.random() * DICAS.length)];
+    const elDica = document.getElementById('dica-dia');
+    if (elDica) elDica.innerText = DICAS[Math.floor(Math.random() * DICAS.length)];
 
-  if (!estado.vistoOnboarding) {
-    const onb = document.getElementById('onboarding');
-    if (onb) onb.classList.add('ativo');
+    // Onboarding por cima de tudo — só se ainda não viu
+    atualizarStatusGemini();
+
+    if (!estado.vistoOnboarding) {
+      // pequeno delay para o DOM/CSS estabilizar
+      setTimeout(abrirOnboarding, 80);
+    }
+
+    reiniciarQuiz();
+  } catch (err) {
+    console.error('Erro no init:', err);
   }
-
-  reiniciarQuiz();
 }
 
 document.addEventListener('DOMContentLoaded', init);

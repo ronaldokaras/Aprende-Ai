@@ -140,6 +140,9 @@
       </div>
 
       <div class="resultado" id="resultado">
+        <div style="margin-bottom:8px;">
+          <span id="ia-badge" class="ia-badge ia-off" style="display:none;">📦 Demo</span>
+        </div>
         <div class="bloco explicacao">
           <h3>📖 Explicação simples
             <button type="button" class="btn-ouvir" onclick="ouvirTexto('txt-explicacao')">🔊 Ouvir</button>
@@ -337,6 +340,28 @@
       <h3 class="titulo-secao">Atividade recente</h3>
       <div class="card" id="historico-perfil"></div>
 
+      <h3 class="titulo-secao">🤖 Inteligência Artificial (Gemini)</h3>
+      <div class="card gemini-card">
+        <p style="font-size:0.88rem; margin-bottom:10px; color:var(--texto-suave);">
+          Chave <strong>gratuita</strong> do Google. A dúvida passa a ser respondida por IA de verdade.
+        </p>
+        <div id="gemini-status" style="margin-bottom:10px;"></div>
+        <input type="password" id="input-gemini-key" class="input-key" autocomplete="off" placeholder="Cole a chave do Gemini aqui" />
+        <div class="gemini-botoes">
+          <button type="button" class="btn-primario" onclick="salvarGeminiKey()">Salvar chave</button>
+          <button type="button" class="btn-secundario" onclick="abrirLinkGemini()">Pegar chave grátis</button>
+        </div>
+        <ol class="gemini-passos">
+          <li>Abra <strong>aistudio.google.com/apikey</strong></li>
+          <li>Faça login com Google → <strong>Create API key</strong></li>
+          <li>Cole a chave aqui e toque em Salvar</li>
+        </ol>
+        <p style="font-size:0.75rem; color:var(--texto-suave); margin-top:8px;">
+          Você também pode editar a chave no arquivo <strong>config.js</strong> (campo GEMINI_API_KEY).
+          A chave fica no aparelho; não enviamos para nenhum servidor nosso.
+        </p>
+      </div>
+
       <button type="button" class="btn-secundario" onclick="zerarProgresso()">🗑️ Zerar progresso</button>
     </section>
 
@@ -369,6 +394,7 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script src="dados.js"></script>
   <script src="app.js"></script>
   <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
