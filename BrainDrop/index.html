@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrainDrop - O Jogo</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="app">
+    
+    <!-- TELA INICIAL -->
+    <div id="start-screen" class="screen">
+      <h1 class="logo-big">BrainDrop</h1>
+      <p class="subtitle">Escolha o seu modo de desafio:</p>
+      
+      <button class="btn-start" id="btn-start-tf" style="background: linear-gradient(135deg, var(--pastel-green), #86D47B); margin-bottom: 12px;">
+        ⚖️ Verdadeiro ou Falso
+      </button>
+      <button class="btn-start" id="btn-start-dpad" style="background: linear-gradient(135deg, var(--pastel-purple), #A47CF6); margin-bottom: 24px;">
+        🎯 Desafio D-Pad (Categorias)
+      </button>
+      
+      <button onclick="window.location.href='../index.html'" style="background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: 0.2s;">
+        ⬅️ Voltar para o Aprende Aí
+      </button>
+
+      <p class="keyboard-hint">Teclado: Setas ou W, A, S, D</p>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="game-screen" class="screen hidden">
+      <header>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h1>BrainDrop</h1>
+          <div id="hearts-container" class="hearts-container">
+            <span id="heart-1" class="heart">❤️</span>
+            <span id="heart-2" class="heart">❤️</span>
+            <span id="heart-3" class="heart">❤️</span>
+          </div>
+        </div>
+        <div class="stats" id="stats-container">
+          <span>Pontos: <strong id="score" class="score-val">0</strong></span>
+          <span>Combo: <strong id="streak" class="streak-val">0</strong> <span id="fire-icon" class="hidden">🔥</span></span>
+        </div>
+      </header>
+
+      <div class="wave-indicator">Onda <span id="current-wave">1</span></div>
+
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <div class="timer" id="timer-bar-container">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div id="floating-score" class="floating-score"></div>
+      <div id="combo-text" class="combo-text"></div>
+
+      <div class="card-area" id="card-area">
+        <div class="card drop-card" id="learn-card">
+          <button class="btn-tts" onclick="lerTexto('learn')">🔊</button>
+          <span class="badge label-learn">Fase 1: O Drop</span>
+          <h2 id="concept-title" class="concept-title">Conceito</h2>
+          <p class="card-text concept-text" id="concept-text">Texto explicativo...</p>
+          <button id="btn-learned" class="btn-learned">🧠 Entendi, testar!</button>
+        </div>
+
+        <div class="card quiz-card hidden" id="quiz-card">
+          <button class="btn-tts" onclick="lerTexto('quiz')">🔊</button>
+          <span class="badge label-quiz" id="quiz-label">Fase 2: O Swipe</span>
+          <p class="card-text" id="card-text">Carregando...</p>
+          <span class="card-hint" id="card-hint">Arraste na direção da resposta</span>
+          
+          <div id="icon-left" class="swipe-icon icon-left">◄</div>
+          <div id="icon-right" class="swipe-icon icon-right">►</div>
+          <div id="icon-up" class="swipe-icon icon-up">▲</div>
+          <div id="icon-down" class="swipe-icon icon-down">▼</div>
+        </div>
+      </div>
+
+      <div class="d-pad-container hidden" id="quiz-buttons">
+        <button class="d-btn btn-up" id="btn-up" data-dir="up"><span class="icon">▲</span> <span id="txt-up">Opção</span></button>
+        <button class="d-btn btn-right" id="btn-right" data-dir="right"><span class="icon">►</span> <span id="txt-right">Opção</span></button>
+        <button class="d-btn btn-left" id="btn-left" data-dir="left"><span class="icon">◄</span> <span id="txt-left">Opção</span></button>
+        <button class="d-btn btn-down" id="btn-down" data-dir="down"><span class="icon">▼</span> <span id="txt-down">Opção</span></button>
+      </div>
+    </div>
+
+    <!-- TELA DE FIM (ÚNICA E CORRETA) -->
+    <div id="end-screen" class="screen hidden">
+      <h1 class="logo-big" id="end-title">Fim do Drop!</h1>
+      <div class="result-card" id="result-card">
+        <p>Pontuação Final</p>
+        <h2 id="final-score">0</h2>
+        <p>Maior Combo: <strong id="final-streak">0</strong> 🔥</p>
+        <div id="badges-container" class="badges-container"></div>
+      </div>
+      
+      <button class="btn-start" id="btn-restart" style="margin-bottom: 10px;">🔄 Jogar Novamente</button>
+      <button class="btn-start" onclick="window.location.href='../index.html'" style="background: transparent; color: var(--text-muted); box-shadow: none; border: 1px solid var(--text-muted);">⬅️ Sair do Jogo</button>
+    </div>
+
+    <!-- BOTÕES DE ACESSIBILIDADE DENTRO DO APP -->
+    <button id="btn-open-acc" class="floating-acc-btn" title="Opções de Acessibilidade">⚙️</button>
+
+    <div id="acc-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚙️ Acessibilidade</h2>
+          <button id="btn-close-acc" class="btn-close">✖</button>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Fonte para Dislexia</span><input type="checkbox" id="acc-dyslexia"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Modo Daltonismo</span><input type="checkbox" id="acc-colorblind"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Alto Contraste</span><input type="checkbox" id="acc-contrast"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Reduzir Movimento</span><input type="checkbox" id="acc-reduce-motion"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Modo Zen (Sem Tempo)</span><input type="checkbox" id="acc-zen"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Modo Foco Total</span><input type="checkbox" id="acc-focus"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Grifar Palavras-Chave</span><input type="checkbox" id="acc-highlight"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option">
+          <label class="switch-label"><span>Modo Toque (Sem Arraste)</span><input type="checkbox" id="acc-tap-only"><span class="slider"></span></label>
+        </div>
+        <div class="acc-option" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+          <label style="font-size: 13px; font-weight: 600; display: flex; justify-content: space-between;">
+            <span>Sensibilidade do Arraste</span>
+            <span id="threshold-val">80px</span>
+          </label>
+          <input type="range" id="acc-threshold" min="20" max="150" value="80" style="width: 100%; margin-top: 8px; accent-color: var(--pastel-purple);">
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

@@ -12,7 +12,7 @@
 </head>
 <body>
 
-  <!-- ONBOARDING: overlay em tela cheia — some ao tocar no botão ou no fundo escuro -->
+  <!-- ONBOARDING -->
   <div id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-titulo">
     <div class="onboarding-backdrop" onclick="fecharOnboarding()"></div>
     <div class="onboarding-card">
@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <!-- CELEBRAÇÃO: toque em qualquer lugar para fechar -->
+  <!-- CELEBRAÇÃO -->
   <div id="celebra-overlay" class="celebra-overlay">
     <div class="celebra-backdrop" onclick="fecharCelebracao()"></div>
     <div class="celebra-box">
@@ -39,7 +39,6 @@
     </div>
   </div>
 
-  <!-- TOAST -->
   <div id="toast" aria-live="polite"></div>
 
   <!-- TOPBAR -->
@@ -49,29 +48,38 @@
       <strong>Aprende Aí</strong>
     </div>
     <div class="topbar-acoes">
-      <button type="button" class="btn-acess" id="btn-tema" onclick="alternarTema()" title="Modo escuro">🌙</button>
+      <!-- Ícones SVG no Topbar -->
+      <button type="button" class="btn-acess" id="btn-tema" onclick="alternarTema()" title="Modo escuro">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
       <button type="button" class="btn-acess" onclick="aumentarFonte()" title="Aumentar fonte">A+</button>
       <button type="button" class="btn-acess" onclick="diminuirFonte()" title="Diminuir fonte">A-</button>
-      <button type="button" class="btn-acess" onclick="alternarContraste()" title="Alto contraste">◐</button>
+      <button type="button" class="btn-acess" onclick="alternarContraste()" title="Alto contraste">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 0 20 10 10 0 0 1 0-20z"></path><path d="M12 2v20"></path></svg>
+      </button>
     </div>
   </header>
 
-  <!-- CONTEÚDO -->
   <main id="conteudo">
-
     <!-- ===== HOME ===== -->
     <section class="tela ativa" id="tela-home">
       <div class="card destaque">
         <div class="stat">
-          <span class="stat-icon">🔥</span>
+          <span class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
+          </span>
           <div><strong id="streak-dias">0</strong><span>dias seguidos</span></div>
         </div>
         <div class="stat">
-          <span class="stat-icon">⭐</span>
+          <span class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </span>
           <div><strong id="pontos-total">0</strong><span>pontos</span></div>
         </div>
         <div class="stat">
-          <span class="stat-icon">📚</span>
+          <span class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </span>
           <div><strong id="cards-dominados">0</strong><span>cards</span></div>
         </div>
       </div>
@@ -92,24 +100,40 @@
       <h2 class="titulo-secao">O que vamos fazer hoje?</h2>
       <div class="grid-acoes">
         <button type="button" class="acao-card azul" onclick="irPara('tela-duvida')">
-          <span class="acao-emoji">💬</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </span>
           <strong>Tirar dúvida</strong>
           <small>Pergunte qualquer coisa</small>
         </button>
         <button type="button" class="acao-card verde" onclick="irPara('tela-estudar')">
-          <span class="acao-emoji">📖</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </span>
           <strong>Estudar</strong>
           <small>Quiz, cards, feed</small>
         </button>
         <button type="button" class="acao-card amarelo" onclick="iniciarRapido()">
-          <span class="acao-emoji">⚡</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </span>
           <strong>Estudo rápido</strong>
           <small>Sessão de 3 min</small>
         </button>
         <button type="button" class="acao-card roxo" onclick="irPara('tela-foco')">
-          <span class="acao-emoji">⏱️</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </span>
           <strong>Modo foco</strong>
           <small>Pomodoro 25 min</small>
+        </button>
+
+        <button type="button" class="acao-card azul" onclick="window.location.href='BrainDrop/index.html'">
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg>
+          </span>
+          <strong>Jogar BrainDrop</strong>
+          <small>Desafio rápido</small>
         </button>
       </div>
 
@@ -168,22 +192,30 @@
 
       <div class="grid-acoes">
         <button type="button" class="acao-card verde" onclick="irPara('tela-quiz')">
-          <span class="acao-emoji">🎯</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+          </span>
           <strong>Quiz</strong>
           <small>Perguntas rápidas</small>
         </button>
         <button type="button" class="acao-card azul" onclick="irPara('tela-feed')">
-          <span class="acao-emoji">📱</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+          </span>
           <strong>Pílulas</strong>
           <small>Feed de 30s</small>
         </button>
         <button type="button" class="acao-card amarelo" onclick="irPara('tela-flashcards')">
-          <span class="acao-emoji">🃏</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          </span>
           <strong>Flashcards</strong>
           <small>Revisão inteligente</small>
         </button>
         <button type="button" class="acao-card roxo" onclick="irPara('tela-prova')">
-          <span class="acao-emoji">📝</span>
+          <span class="acao-emoji">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </span>
           <strong>Modo prova</strong>
           <small>Simulado com nota</small>
         </button>
@@ -367,26 +399,33 @@
 
   </main>
 
-  <!-- NAV INFERIOR -->
+  <!-- NAV INFERIOR (COM SVGs) -->
   <nav class="bottom-nav">
     <button type="button" class="nav-item ativo" data-tela="tela-home" onclick="irPara('tela-home')">
-      <span>🏠</span><small>Início</small>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <small>Início</small>
     </button>
     <button type="button" class="nav-item" data-tela="tela-duvida" onclick="irPara('tela-duvida')">
-      <span>💬</span><small>Dúvida</small>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <small>Dúvida</small>
     </button>
     <button type="button" class="nav-item" data-tela="tela-estudar" onclick="irPara('tela-estudar')">
-      <span>📖</span><small>Estudar</small>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      <small>Estudar</small>
     </button>
-    <button type="button" class="nav-item" data-tela="tela-foco" onclick="irPara('tela-foco')">
-      <span>⏱️</span><small>Foco</small>
+    
+    <!-- O JOGO -->
+    <button type="button" class="nav-item" onclick="window.location.href='BrainDrop/index.html'">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg>
+      <small>BrainDrop</small>
     </button>
+
     <button type="button" class="nav-item" data-tela="tela-perfil" onclick="irPara('tela-perfil')">
-      <span>🏆</span><small>Perfil</small>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <small>Perfil</small>
     </button>
   </nav>
 
-  <!-- VLibras (escondido durante onboarding via CSS body.onboarding-ativo) -->
   <div vw class="enabled" id="vlibras-root">
     <div vw-access-button class="active"></div>
     <div vw-plugin-wrapper>
@@ -401,6 +440,6 @@
   <script>
     try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch (e) {}
   </script>
-
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </body>
 </html>
